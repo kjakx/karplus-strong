@@ -5,15 +5,15 @@ use hound;
 
 fn main() {
     const FS: f64 = 44100.0;
-    const F: f64 = 512.0;
+    const F: f64 = 523.25;
     const L: usize = (FS / F) as usize;
-    let a = 0.9;
+    let a = 0.5;
     let d = 0.99;
     let mut x = dasp_signal::from_iter(dasp_signal::noise(0).take(L));
     let mut w_buf = dasp_ring_buffer::Fixed::from(vec![0.0; L+1]);
     let mut y = dasp_signal::gen_mut(|| {
         let xn = x.next();
-        let w = xn+d*(a*w_buf[0]+(1.0-a)*w_buf[1]);
+        let w = xn+d*(a*w_buf[1]+(1.0-a)*w_buf[0]);
         w_buf.push(w);
         w
     });
@@ -25,7 +25,7 @@ fn main() {
         sample_format: hound::SampleFormat::Int,
     };
     let mut writer = hound::WavWriter::create("karplus-strong.wav", spec).unwrap();
-    const DURATION: f64 = 10.0;
+    const DURATION: f64 = 3.0;
     (0..(FS*DURATION) as usize).for_each(|_| {
         writer.write_sample(y.next().to_sample::<i16>()).unwrap();
     });
